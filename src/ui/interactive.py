@@ -1,3 +1,4 @@
+import shlex
 from cmd import Cmd
 
 from command import Command
@@ -9,16 +10,15 @@ class Prompt(Cmd):
         self.command = Command()
 
     def onecmd(self, line):
-        args = line.strip().split(' ') 
-
-        cmd = args[0]
+        cmd, args, line = self.parseline(line) 
+        args = shlex.split(args)
         if cmd in self.command.list:
             nargs = int(self.command.list[cmd]['args'])
 
-            if nargs != len(args) - 1:
+            if nargs != len(args):
                 print('wrong number of arguments (expected %i)' % nargs)
             else:
-                self.command.list[cmd]['exec'](self.command, *args[1:])
+                self.command.list[cmd]['exec'](self.command, *args)
         else:
             return Cmd.onecmd(self, line)
 
