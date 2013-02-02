@@ -1,5 +1,5 @@
 #engine = 'sqlite:///:memory:'
-engine = 'sqlite:////home/franck/Perso/Dev/ptime/db/ptime.db'
+engine = 'sqlite:////home/franck/Dev/ptime/db/ptime.db'
 
 log_file = '/tmp/ptime.log'
 

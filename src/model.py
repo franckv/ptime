@@ -9,9 +9,11 @@ class Project(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
+    default = Column(Boolean)
 
     def __init__(self, name):
         self.name = name
+        self.default = False
 
     def __repr__(self):
         return "<Project('%s')>" % self.name
@@ -46,5 +48,5 @@ class Task(Base):
         self.enabled = True
 
     def __repr__(self):
-        return "<Task('%s')>" % self.path
+        return "<Task('%s')>" % self.name
 

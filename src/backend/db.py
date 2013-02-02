@@ -2,11 +2,13 @@ import logging
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError
 
 from model import Base, Project, Category, Task
+from . import Backend
 import config
 
-class DB(object):
+class DB(Backend):
     def __init__(self):
         engine = create_engine(config.engine)
         Session = sessionmaker(bind=engine)
@@ -16,144 +18,77 @@ class DB(object):
     def close(self):
         if self.session:
             try:
-                self.session.commit()
+                self.commit()
             except:
                 self.session.close()
 
+    def commit(self):
+        self.session.commit()
+
     def create(self):
-        Base.metadata.create_all(self.session.bind)
+        try:
+            Base.metadata.create_all(self.session.bind)
+        except OperationalError:
+            print('Cannot create DB %s' % config.engine)
 
     def drop(self):
-        Base.metadata.drop_all(self.session.bind)
+        try:
+            Base.metadata.drop_all(self.session.bind)
+        except OperationalError:
+            print('Cannot drop DB %s' % config.engine)
 
     def reset(self):
         for table in (Project, Category, Task):
             if table.__table__.exists(self.session.bind):
                 self.session.connection().execute(table.__table__.delete())
-        self.session.commit()
+        self.commit()
 
-    def get_tasks(self, project, category):
-        results = []
+    def apply_filter(self, query, flt):
+        if flt is not None:
+            for col, val in flt.items():
+                query = query.filter(col == val)
 
-        query = self.session.query(Task).join(Category.tasks).join(Category.project).filter(Category.name == category).filter(Project.name == project)
-        for task in query.all():
-            results.append(task)
+        return query
 
-        return results
+    def item_exists(self, cls, flt = None):
+        query = self.session.query(cls)
+        query = self.apply_filter(query, flt)
 
-    def create_project(self, name):
-        query = self.session.query(Project)
-        if len(query.all()) > 0:
-            print('Project already exists')
-            return
+        return len(query.all()) > 0
 
-        proj = Project(name)
-        self.session.add(proj)
+    def add_item(self, item):
+        self.session.add(item)
+        self.commit()
 
-        self.session.commit()
+    def update_item(self, item):
+        if item not in self.session:
+            self.session.add(item)
 
-    def create_category(self, project, name):
-        project = self.get_project(project)
-        query = self.session.query(Category).filter(Category.name == name).filter(Category.project_id == project.id)
-        if len(query.all()) > 0:
-            print('Category already exists')
-            return
+        self.commit()
 
-        category = Category(name)
-        category.project = project
-        self.session.add(category)
-
-        self.session.commit()
-
-    def create_task(self, project, category, name):
-        project = self.get_project(project)
-        category = self.get_category(project, category)
-        if category is None:
-            print('Invalid category')
-            return
-
-        query = self.session.query(Task).filter(Task.name == name).filter(Task.category_id == category.id)
-        if len(query.all()) > 0:
-            print('Task already exists')
-            return
-
-        task = Task(name)
-        task.category_id = category.id
-        self.session.add(task)
-
-        self.session.commit()
-
-    def get_project(self, name):
-        if isinstance(name, Project):
-            return name
-        query = self.session.query(Project).filter(Project.name == name)
-        projects = query.all()
-        if len(projects) == 1:
-            return projects[0]
+    def get_first_item(self, cls):
+        query = self.session.query(cls)
+        results = query.all()
+        if len(results) > 0:
+            return results[0]
         else:
             return None
 
-    def get_categories(self, project):
-        if not isinstance(project, Project):
-            project = self.get_project(project)
+    def get_items(self, cls, flt = None):
+        query = self.session.query(cls)
+        query = self.apply_filter(query, flt)
+        return query.all()
 
-        if project is None:
-            print('Invalid project')
-            return None
-
-        query = self.session.query(Category).filter(Category.project_id == project.id)
-        categories = query.all()
-
-        return categories
-
-    def get_category(self, project, name):
-        if isinstance(name, Category):
-            return name
-        if not isinstance(project, Project):
-            project = self.get_project(project)
-
-        if project is None:
-            print('Invalid project')
-            return None
-
-        query = self.session.query(Category).filter(Category.name == name).filter(Category.project_id == project.id)
-        categories = query.all()
-
-        if len(categories) == 1:
-            return categories[0]
+    def get_item(self, cls, flt = None):
+        results = self.get_items(cls, flt)
+        if len(results) == 1:
+            return results[0]
         else:
             return None
 
-    def get_task(self, project, category, name):
-        if isinstance(name, Task):
-            return name
-        if not isinstance(project, Project):
-            project = self.get_project(project)
-        if not isinstance(category, Category):
-            category = self.get_category(project, category)
+    def bulk_update(self, cls, changes, flt = None):
+        query = self.session.query(cls)
+        query = self.apply_filter(query, flt)
+        query.update(changes)
+        self.commit()
 
-        if category is None:
-            print('Invalid category')
-            return None
-
-        query = self.session.query(Task).filter(Task.name == name).filter(Task.category_id == category.id)
-        tasks = query.all()
-
-        if len(tasks) == 1:
-            return tasks[0]
-        else:
-            return None
-
-    def disable_task(self, project, category, name):
-        task = self.get_task(project, category, name)
-
-        task.enabled = False 
-
-        self.session.commit()
-
-    def enable_task(self, project, category, name):
-        task = self.get_task(project, category, name)
-
-        task.enabled = True 
-
-        self.session.commit()
