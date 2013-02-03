@@ -69,6 +69,9 @@ class Command(object):
     def do_disable_task(self, project, category, name):
         self.backend.disable_task(project, category, name)
 
+    def do_delete_task(self, project, category, name):
+        self.backend.delete_task(project, category, name)
+
     def do_get_tasks(self, category):
         tasks = self.backend.get_tasks(category)
         if tasks is not None:

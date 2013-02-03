@@ -60,6 +60,10 @@ class DB(Backend):
         self.session.add(item)
         self.commit()
 
+    def delete_item(self, item):
+        self.session.delete(item)
+        self.commit()
+
     def update_item(self, item):
         if item not in self.session:
             self.session.add(item)

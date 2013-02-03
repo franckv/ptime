@@ -178,6 +178,10 @@ class Backend(object):
 
         return self.get_item(Task, {Task.name: task, Task.category_id: category.id})
 
+    def delete_project_task(self, project, category, name):
+        task = self.get_task(project, category, name)
+        self.delete_item(task)
+
     def disable_task(self, project, category, name):
         task = self.get_task(project, category, name)
 
