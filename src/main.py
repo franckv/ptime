@@ -1,3 +1,5 @@
+#!/usr/bin/python2
+
 import os, sys
 from optparse import OptionParser
 import logging
@@ -20,13 +22,18 @@ if __name__ == '__main__':
     parser = OptionParser(usage)
     parser.add_option('--ui', dest='ui', default='console', help='interface: curses, gtk or console (default)')
     parser.add_option('-i', action='store_const', const='interactive', dest='ui', help='interactive mode')
+    parser.add_option('-k', action='store_const', const='kivy', dest='ui', help='interactive mode')
 
     (options, args) = parser.parse_args()
 
+    print(options.ui)
     if options.ui == 'curses':
         ui.ncurses.run()
     elif options.ui == 'gtk':
         ui.gtkui.run()
+    elif options.ui == 'kivy':
+        from ui.kivyui import PTimeApp
+        PTimeApp().run()
     elif options.ui == 'interactive':
         print('interactive mode')
         from ui.interactive import Prompt
