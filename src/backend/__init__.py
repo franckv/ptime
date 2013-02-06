@@ -80,6 +80,22 @@ class Backend(object):
 
         return cat
 
+    def delete_category(self, category):
+        project = self.get_default_project()
+
+        return self.delete_project_category(project, category)
+
+    def delete_project_category(self, project, category):
+        project = self.get_project(project)
+
+        if not isinstance(category, Category):
+            category = self.get_category(project, category)
+
+        tasks = self.get_project_tasks(project, category)
+        for task in tasks:
+            self.delete_project_task(project, category, task)
+        self.delete_item(category)
+
     def get_category(self, project, category):
         if isinstance(category, Category):
             return category
