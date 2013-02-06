@@ -15,29 +15,31 @@
             size: self.size
 
     BoxLayout:
-        orientation: 'vertical'
-
         BoxLayout:
-            padding: '10dp'
-            spacing: '10dp'
-            size_hint: 1, None
-            pos_hint: {'top': 1}
-            height: '44dp'
-            Image:
+            size_hint: 0.3, 1
+            orientation: 'vertical'
+
+            # logo
+            BoxLayout:
+                padding: '10dp'
+                spacing: '10dp'
                 size_hint: None, None
-                size: '24dp', '24dp'
-                source: 'data/logo/kivy-icon-64.png'
-                mipmap: True
-            Label:
-                height: '24dp'
-                text_size: self.width, None
-                color: (1, 1, 1, .8)
-                text: 'PTime'
+                pos_hint: {'top': 1}
+                height: '44dp'
+                Image:
+                    size_hint: None, None
+                    size: '24dp', '24dp'
+                    source: 'data/logo/kivy-icon-64.png'
+                    mipmap: True
+                Label:
+                    height: '24dp'
+                    text_size: self.width, None
+                    color: (1, 1, 1, .8)
+                    text: 'PTime'
 
-        BoxLayout:
+            # project tree
             BoxLayout:
                 orientation: 'vertical'
-                size_hint: (0.3, 1)
                 Spinner:
                     size_hint: 1, None
                     height: '24dp'
@@ -45,46 +47,63 @@
 
                 TreeView:
                     id: projects
-                    root_options: {'text': 'Projects', 'no_selection': True, '': True}
+                    root_options: {'text': 'Projects', 'no_selection': True}
                     hide_root: True
 
-            BoxLayout:
-                orientation: 'vertical'
-                #spacing: 10
-                GridLayout:
+                BoxLayout:
                     cols: 2
-                    size_hint: (1, None)
-                    #spacing: 10
-                    #padding: 10
+                    size_hint: 1, None
                     height: '24dp'
                     Button:
-                        text: 'Add'
-                        height: '24dp'
-                        on_release: root.btn_add()
+                        text: '+'
+                        on_release: root.btn_add_cat()
                     Button:
-                        text: 'Delete'
-                        height: '24dp'
-                        on_release: root.btn_delete()
+                        text: '-'
+                        on_release: root.btn_delete_cat()
 
-                Label:
-                    text: 'Tasks'
-                    size_hint_y: None
-                    height: max(dp(45), self.texture_size[1] + dp(10))
-                    text_size: self.width, None
-                    valign: 'middle'
-                    halign: 'center'
+        BoxLayout:
+            orientation: 'vertical'
+           
+            # header
+            Label:
+                text: 'Tasks'
+                size_hint_y: None
+                height: max(dp(45), self.texture_size[1] + dp(10))
+                text_size: self.width, None
+                valign: 'middle'
+                halign: 'center'
 
-                    canvas.before:
-                        Color:
-                            rgba: .2, .2, .2, .8
-                        Rectangle:
-                            size: self.size
-                            pos: self.pos
+                canvas.before:
+                    Color:
+                        rgba: .2, .2, .2, .8
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+            
+            # buttons
+            GridLayout:
+                cols: 3
+                size_hint: 1, None
+                #spacing: 10
+                #padding: 10
+                height: '24dp'
+                Button:
+                    text: 'Add'
+                    #height: '24dp'
+                    on_release: root.btn_add()
+                Button:
+                    text: 'Delete'
+                    #height: '24dp'
+                    on_release: root.btn_delete()
+                Button:
+                    text: 'Disable'
 
-                ScrollView:
-                    id: scroll
-                    GridLayout:
-                        cols: 1
-                        size_hint: (1, None)
-                        id: grid
+            # main view
+            ScrollView:
+                id: scroll
+                GridLayout:
+                    cols: 1
+                    size_hint: 1, None
+                    id: grid
+
 

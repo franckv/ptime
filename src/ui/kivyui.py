@@ -1,7 +1,6 @@
 import kivy
 from kivy.app import App
 from kivy.metrics import dp
-from kivy.properties import ObjectProperty
 from kivy.factory import Factory
 from kivy.uix.widget import Widget
 from kivy.uix.floatlayout import FloatLayout
@@ -10,7 +9,9 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.treeview import TreeView, TreeViewLabel
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
 from kivy.uix.checkbox import CheckBox
+from kivy.uix.popup import Popup
 
 import config
 from backend import get_backend
@@ -20,18 +21,18 @@ class PTimeWidget(FloatLayout):
     def btn_add(self):
         node = self.projects.selected_node
 
-        if not hasattr(node, 'item'):
-            return
-
-        if not node.is_selected:
+        if not hasattr(node, 'item') or node.is_selected == False:
             return
 
         item = node.item
 
         if isinstance(item, Category):
-            name = 'new task3'
-            self.app.backend.create_project_task(item.project, item, name)
+            self.show_popup('New task', cb=lambda btn, popup, value, item=item, node=node: self.add_task(popup, value, item, node))
 
+    def add_task(self, popup, value, item, node):
+        popup.dismiss()
+        if value.text is not None and len(value.text) > 0:
+            self.app.backend.create_project_task(item.project, item, value.text)
             self.app.on_select_node(self.projects, node)
 
     def btn_delete(self):
@@ -44,6 +45,47 @@ class PTimeWidget(FloatLayout):
             node = self.projects.selected_node
             if node is not None and node.is_selected:
                 self.app.on_select_node(self.projects, node)
+
+    def btn_add_cat(self):
+        project = self.drop_project.text
+        self.show_popup('New category', cb=lambda btn, popup, value, project=project: self.add_cat(popup, value, project))
+
+    def add_cat(self, popup, value, project):
+        popup.dismiss()
+        if value.text is not None and len(value.text) > 0:
+            self.app.backend.create_project_category(project, value.text)
+            self.app.build_tree(project, self.projects)
+
+    def btn_delete_cat(self):
+        project = self.drop_project.text
+
+        node = self.projects.selected_node
+        if not hasattr(node, 'item') or node.is_selected == False:
+            return
+        item = node.item
+        if isinstance(item, Category):
+            self.app.backend.delete_project_category(project, item)
+        self.app.build_tree(project, self.projects)
+        node.is_selected = False
+        self.app.on_select_node(self.projects, None)
+
+    def show_popup(self, title, cb):
+        content = GridLayout(rows=4)
+        content.add_widget(BoxLayout())
+        line = BoxLayout(size_hint_y=None, height='50sp')
+        lbl = Label(text='Name', halign='left', valign='middle')
+        lbl.bind(size=lbl.setter('text_size'))
+        line.add_widget(lbl)
+        value = TextInput()
+        line.add_widget(value)
+        content.add_widget(line)
+        content.add_widget(BoxLayout())
+        btnclose = Button(text='Done', size_hint_y=None, height='50sp')
+        content.add_widget(btnclose)
+        popup = Popup(content=content, title=title,
+                      size_hint=(None, None), size=('300dp', '300dp'))
+        btnclose.bind(on_release=lambda btn, popup=popup, value=value: cb(btn, popup, value))
+        popup.open()
 
 Factory.register('PTimeWidget', cls=PTimeWidget)
 
@@ -100,11 +142,11 @@ class PTimeApp(App):
             for task in tasks:
                 layout = BoxLayout(size_hint_y=None)
                 layout.height = dp(24)
-                check = CheckBox(size_hint_x=None)
-                lbl = Label(text=task.name, halign='left')
-                lbl.item = task
-                lbl.text_size = (lbl.width, None)
-                layout.add_widget(check)
-                layout.add_widget(lbl)
                 self.window.grid.add_widget(layout)
+                check = CheckBox(size_hint_x=0.1)
+                layout.add_widget(check)
+                lbl = Label(text=task.name, halign='left', valign='middle')
+                lbl.item = task
+                lbl.bind(size=lbl.setter('text_size'))
+                layout.add_widget(lbl)
 
