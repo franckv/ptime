@@ -17,6 +17,11 @@ import config
 from backend import get_backend
 from model import Category
 
+class InputBox(Widget):
+    def __init__(self, **kwargs):
+        self.title = kwargs['title']
+        super(InputBox, self).__init__(**kwargs)
+
 class PTimeWidget(FloatLayout):
     def btn_add(self):
         node = self.projects.selected_node
@@ -27,7 +32,9 @@ class PTimeWidget(FloatLayout):
         item = node.item
 
         if isinstance(item, Category):
-            self.show_popup('New task', cb=lambda btn, popup, value, item=item, node=node: self.add_task(popup, value, item, node))
+            inputbox = InputBox(title='New task')
+            inputbox.done.bind(on_release=lambda btn, popup=inputbox.popup, value=inputbox.value, item=item, node=node: self.add_task(popup, value, item, node))
+            inputbox.popup.open()
 
     def add_task(self, popup, value, item, node):
         popup.dismiss()
@@ -48,7 +55,9 @@ class PTimeWidget(FloatLayout):
 
     def btn_add_cat(self):
         project = self.drop_project.text
-        self.show_popup('New category', cb=lambda btn, popup, value, project=project: self.add_cat(popup, value, project))
+        inputbox = InputBox(title='New category')
+        inputbox.done.bind(on_release=lambda btn, popup=inputbox.popup, value=inputbox.value, project=project: self.add_cat(popup, value, project))
+        inputbox.popup.open()
 
     def add_cat(self, popup, value, project):
         popup.dismiss()
@@ -87,6 +96,7 @@ class PTimeWidget(FloatLayout):
         btnclose.bind(on_release=lambda btn, popup=popup, value=value: cb(btn, popup, value))
         popup.open()
 
+Factory.register('InputBox', cls=InputBox)
 Factory.register('PTimeWidget', cls=PTimeWidget)
 
 class PTimeApp(App):

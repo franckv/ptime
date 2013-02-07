@@ -1,6 +1,40 @@
 #:kivy 1.0
 #:import kivy kivy
 
+<InputBox>:
+    popup: popup
+    value: value
+    done: done
+    Popup:
+        id: popup
+        content: content
+        title: root.title
+        size_hint: (None, None)
+        size: ('300dp', '300dp')
+
+        GridLayout:
+            id: content
+            rows: 4
+            BoxLayout:
+                size_hint_y: None
+                height: '50sp'
+                Label:
+                    text: 'Name'
+                    halign: 'left'
+                    valign: 'middle'
+                    text_size: self.width, None
+            BoxLayout:
+                size_hint_y: None
+                height: '50sp'
+                TextInput:
+                    id: value
+            BoxLayout:
+            Button:
+                id: done
+                text: 'Done'
+                size_hint_y: None
+                height: '50sp'
+
 <PTimeWidget>:
     projects: projects
     scroll: scroll
