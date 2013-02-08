@@ -1,4 +1,5 @@
 import json
+import os
 
 from model import Project, Category, Task
 from . import Backend
@@ -12,26 +13,51 @@ class ModelEncoder(json.JSONEncoder):
         if isinstance(obj, Task):
             return {'class': obj.__class__.__name__, 'id': obj.id, 'name': obj.name, 'category_id': obj.category_id, 'enabled': obj.enabled}
 
-class ModelDecoder(json.JSONEncoder):
-    pass
+class ModelDecoder(json.JSONDecoder):
+    def decode(self, s):
+        items = []
+
+        data = json.JSONDecoder.decode(self, s)
+
+        for obj in data:
+            cls = obj['class']
+
+            if cls == 'Project':
+                o = Project(obj['name'])
+                o.default = obj['default']
+            elif cls == 'Category':
+                o = Category(obj['name'])
+                o.project_id = obj['project_id']
+            elif cls == 'Task':
+                o = Task(obj['name'])
+                o.default = obj['enabled']
+                o.category_id = obj['category_id']
+            o.id = obj['id']
+            items.append(o)
+        return items
 
 class JSon(Backend):
     def __init__(self, filename):
         self.filename = filename
-        f = open(filename, 'r')
-        str = f.read()
+        self.data = {}
+
+        if not os.path.exists(filename):
+            f = open(filename, 'a')
+        else:
+            f = open(filename, 'r')
+        items = json.load(f, cls=ModelDecoder)
         f.close()
-        items = json.load(f, cls=ModelEncoder)
         for item in items:
-            self.data[item.id] = item
+            key = item.__class__.__name__ + '.' + str(item.id)
+            self.data[key] = item
 
     def close(self):
         pass
 
     def commit(self):
-        str = json.dumps(self.data, cls=ModelDecoder)
+        s = json.dumps(self.data.values(), cls=ModelEncoder, separators=(',', ':'))
         f = open(self.filename, 'w')
-        f.write(str)
+        f.write(s)
         f.close()
 
     def create(self):
@@ -43,31 +69,44 @@ class JSon(Backend):
         f.close()
 
     def reset(self):
-        pass
+        f = open(self.filename, 'w')
+        f.close()
 
-    def apply_flter(self, query, flt):
-        pass
+    def apply_filter(self, query, flt):
+        print('apply_filter')
+        print(flt)
 
     def item_exists(self, cls, flt = None):
-        pass
+        print('item_exists')
+        print(flt)
 
     def add_item(self, item):
-        pass
+        key = item.__class__.__name__ + '.' + str(item.id)
+        self.data[key] = item
 
     def delete_item(self, item):
-        pass
+        key = item.__class__.__name__ + '.' + str(item.id)
+        del self.data[key]
 
     def update_item(self, item):
-        pass
+        key = item.__class__.__name__ + '.' + str(item.id)
+        del self.data[key]
+        self.data[key] = item
 
     def get_first_item(self, cls):
-        pass
+        print('get_first_item')
 
     def get_items(self, cls, flt = None):
-        pass
+        print('get_items')
 
     def get_item(self, cls, flt = None):
-        pass
+        for key, obj in self.data.iteritems():
+            if key.startswith(cls.__name__):
+                for attr, val in flt.iteritems():
+                    if  attr is Project.default and obj.default == val:
+                        return obj
+
+        return None
 
     def bulk_update(self, cls, changes, flt = None):
-        pass
+        print('bulk_update')
