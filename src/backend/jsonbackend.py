@@ -1,6 +1,7 @@
 import json
 
 from model import Project, Category, Task
+from . import Backend
 
 class ModelEncoder(json.JSONEncoder):
     def default(self, obj):
