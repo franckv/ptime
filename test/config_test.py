@@ -1,5 +1,5 @@
-backend = {'type': 'DB', 'engine': 'sqlite:////home/franck/Perso/Dev/ptime/db/ptime.db'}
-#backend = {'type': 'JSon', 'filename': '/home/franck/Perso/Dev/ptime/db/ptime.json'}
+backend_db = {'type': 'DB', 'engine': 'sqlite:////home/franck/Perso/Dev/ptime/db/ptime.db'}
+backend_json = {'type': 'JSon', 'filename': '/home/franck/Perso/Dev/ptime/db/ptime.json'}
 
 log_file = '/tmp/ptime.log'
 
