@@ -9,8 +9,8 @@ from . import Backend
 import config
 
 class DB(Backend):
-    def __init__(self):
-        engine = create_engine(config.engine)
+    def __init__(self, engine):
+        engine = create_engine(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
