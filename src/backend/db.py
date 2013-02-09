@@ -1,10 +1,11 @@
 import logging
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Table, MetaData, Column, Boolean, Integer, String, ForeignKey
+from sqlalchemy.orm import sessionmaker, backref, mapper, relationship
 from sqlalchemy.exc import OperationalError
 
-from model import Base, Project, Category, Task
+from model import Project, Category, Task
 from . import Backend
 import config
 
@@ -13,6 +14,35 @@ class DB(Backend):
         engine = create_engine(engine)
         Session = sessionmaker(bind=engine)
         self.session = Session()
+
+        self.metadata = MetaData()
+
+        project = Table('project', self.metadata,
+                Column('id', Integer, primary_key=True),
+                Column('name', String),
+                Column('default', Boolean))
+
+        category = Table('category', self.metadata,
+                Column('id', Integer, primary_key=True),
+                Column('name', String),
+                Column('project_id', Integer, ForeignKey('project.id')))
+
+        task = Table('task', self.metadata,
+                Column('id', Integer, primary_key=True),
+                Column('name', String, nullable=False),
+                Column('enabled', Boolean),
+                Column('category_id', Integer, ForeignKey('category.id')))
+
+        mapper(Task, task)
+
+        mapper(Category, category, properties = {
+                'tasks' : relationship(Task, backref='category')
+        })
+
+        mapper(Project, project, properties = {
+                'categories' : relationship(Category, backref='project')
+        })
+
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
     def close(self):
@@ -27,13 +57,13 @@ class DB(Backend):
 
     def create(self):
         try:
-            Base.metadata.create_all(self.session.bind)
+            self.metadata.create_all(self.session.bind)
         except OperationalError:
             print('Cannot create DB %s' % config.engine)
 
     def drop(self):
         try:
-            Base.metadata.drop_all(self.session.bind)
+            self.metadata.drop_all(self.session.bind)
         except OperationalError:
             print('Cannot drop DB %s' % config.engine)
 
