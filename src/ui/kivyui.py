@@ -14,6 +14,7 @@ from kivy.uix.checkbox import CheckBox
 from kivy.uix.popup import Popup
 
 import config
+from utils import Utils
 from backend import get_backend
 from model import Category
 
@@ -39,7 +40,7 @@ class PTimeWidget(FloatLayout):
     def add_task(self, popup, value, item, node):
         popup.dismiss()
         if value.text is not None and len(value.text) > 0:
-            self.app.backend.create_project_task(item.project, item, value.text)
+            self.app.utils.create_project_task(item.project, item, value.text)
             self.app.on_select_node(self.projects, node)
 
     def btn_delete(self):
@@ -48,7 +49,7 @@ class PTimeWidget(FloatLayout):
                 label, check = child.children
                 if check.active:
                     item = label.item
-                    self.app.backend.delete_project_task(item.category.project, item.category, item)
+                    self.app.utils.delete_project_task(item.category.project, item.category, item)
             node = self.projects.selected_node
             if node is not None and node.is_selected:
                 self.app.on_select_node(self.projects, node)
@@ -62,7 +63,7 @@ class PTimeWidget(FloatLayout):
     def add_cat(self, popup, value, project):
         popup.dismiss()
         if value.text is not None and len(value.text) > 0:
-            self.app.backend.create_project_category(project, value.text)
+            self.app.utils.create_project_category(project, value.text)
             self.app.build_tree(project, self.projects)
 
     def btn_delete_cat(self):
@@ -73,7 +74,7 @@ class PTimeWidget(FloatLayout):
             return
         item = node.item
         if isinstance(item, Category):
-            self.app.backend.delete_project_category(project, item)
+            self.app.utils.delete_project_category(project, item)
         self.app.build_tree(project, self.projects)
         node.is_selected = False
         self.app.on_select_node(self.projects, None)
@@ -103,10 +104,11 @@ class PTimeApp(App):
     def build(self):
         self.window = PTimeWidget()
         self.window.app = self
-        self.backend = get_backend(config) 
-        default_project = self.backend.get_default_project()
+        backend = get_backend(config) 
+        self.utils = Utils(backend)
+        default_project = self.utils.get_default_project()
         self.window.drop_project.text = default_project.name
-        for proj in self.backend.get_projects():
+        for proj in self.utils.get_projects():
             self.window.drop_project.values.append(proj.name)
 
         self.window.drop_project.bind(text=self.select_project)
@@ -120,7 +122,7 @@ class PTimeApp(App):
         return self.window
 
     def select_project(self, menu, value):
-        project = self.backend.get_project(value)
+        project = self.utils.get_project(value)
         self.build_tree(project, self.window.projects)
 
         if self.window.projects.selected_node is not None:
@@ -132,11 +134,11 @@ class PTimeApp(App):
             tree.remove_node(tree.root.nodes[0])
 
         #p = tree.add_node(TreeViewLabel(text=project.name, is_open=project.default, no_selection=True))
-        categories = self.backend.get_project_categories(project)
+        categories = self.utils.get_project_categories(project)
         for category in categories:
             c = tree.add_node(TreeViewLabel(text=category.name, is_open=True, no_selection=False))
             c.item = category
-            tasks = self.backend.get_project_tasks(project, category)
+            tasks = self.utils.get_project_tasks(project, category)
 
     def on_select_node(self, tree, node):
         self.window.grid.clear_widgets()
@@ -147,7 +149,7 @@ class PTimeApp(App):
         item = node.item
 
         if isinstance(item, Category):
-            tasks = self.backend.get_project_tasks(item.project, item)
+            tasks = self.utils.get_project_tasks(item.project, item)
 
             for task in tasks:
                 layout = BoxLayout(size_hint_y=None)
