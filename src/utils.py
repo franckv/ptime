@@ -51,7 +51,7 @@ class Utils(object):
         if project is None:
             return
 
-        self.bulk_update(Project, {Project.default: False})
+        self.backend.bulk_update(Project, {Project.default: False})
         project.default = True
 
         self.backend.update_item(project)
