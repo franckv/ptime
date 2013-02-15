@@ -17,7 +17,7 @@ class Utils(object):
         proj = Project(project)
         self.backend.add_item(proj)
 
-        return project
+        return proj
 
     def set_project(self, project):
         if not isinstance(project, Project):
