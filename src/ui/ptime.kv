@@ -1,10 +1,25 @@
 #:kivy 1.0
 #:import kivy kivy
 
-<InputBox>:
+<TitleBox>:
+    padding: '10dp'
+    spacing: '10dp'
+    Image:
+        size_hint: None, None
+        size: '24dp', '24dp'
+        source: 'data/logo/kivy-icon-64.png'
+        mipmap: True
+    Label:
+        height: '24dp'
+        text_size: self.width, None
+        color: (1, 1, 1, .8)
+        text: 'PTime - ' + root.lbl
+
+<SelectBox>:
     popup: popup
-    value: value
+    values: values
     done: done
+
     Popup:
         id: popup
         content: content
@@ -26,8 +41,9 @@
             BoxLayout:
                 size_hint_y: None
                 height: '50sp'
-                TextInput:
-                    id: value
+                Spinner:
+                    id: values
+
             BoxLayout:
             Button:
                 id: done
@@ -35,10 +51,83 @@
                 size_hint_y: None
                 height: '50sp'
 
-<PTimeWidget>:
-    projects: projects
+<InputBox>:
+    popup: popup
+    value: value
+    done: done
+
+    Popup:
+        id: popup
+        content: content
+        title: root.title
+        size_hint: (None, None)
+        size: ('300dp', '300dp')
+
+        GridLayout:
+            id: content
+            rows: 4
+            BoxLayout:
+                size_hint_y: None
+                height: '50sp'
+                Label:
+                    text: 'Name'
+                    halign: 'left'
+                    valign: 'middle'
+                    text_size: self.width, None
+            BoxLayout:
+                size_hint_y: None
+                height: '40sp'
+                TextInput:
+                    id: value
+                    focus: True
+            BoxLayout:
+            Button:
+                id: done
+                text: 'Done'
+                size_hint_y: None
+                height: '50sp'
+
+<MainScreen>:
+    title: title
+
+    canvas:
+        Color:
+            rgb: 1, 1, 1
+        Rectangle:
+            source: 'data/images/background.jpg'
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        TitleBox:
+            id: title
+            pos_hint: {'top': 1}
+            size_hint_y: None
+            height: '44dp'
+            lbl: 'Current project: ' + root.project
+
+        Button:
+            size_hint_y: None
+            text: 'Select Project'
+            height: '50sp'
+            on_release: root.btn_select_project()
+        Button:
+            size_hint_y: None
+            text: 'New Project'
+            height: '50sp'
+            on_release: root.btn_add_project()
+        Button:
+            size_hint_y: None
+            text: 'Open Project'
+            height: '50sp'
+            on_press: root.open_project()
+        Label:
+            # filler
+
+<ProjectScreen>:
+    title: title
     scroll: scroll
-    drop_project: drop_project
     grid: grid
 
     canvas:
@@ -49,95 +138,232 @@
             size: self.size
 
     BoxLayout:
-        BoxLayout:
-            size_hint: 0.3, 1
-            orientation: 'vertical'
+        orientation: 'vertical'
 
-            # logo
-            BoxLayout:
-                padding: '10dp'
-                spacing: '10dp'
-                size_hint: None, None
-                pos_hint: {'top': 1}
-                height: '44dp'
-                Image:
-                    size_hint: None, None
-                    size: '24dp', '24dp'
-                    source: 'data/logo/kivy-icon-64.png'
-                    mipmap: True
-                Label:
-                    height: '24dp'
-                    text_size: self.width, None
-                    color: (1, 1, 1, .8)
-                    text: 'PTime'
-
-            # project tree
-            BoxLayout:
-                orientation: 'vertical'
-                Spinner:
-                    size_hint: 1, None
-                    height: '24dp'
-                    id: drop_project
-
-                TreeView:
-                    id: projects
-                    root_options: {'text': 'Projects', 'no_selection': True}
-                    hide_root: True
-
-                BoxLayout:
-                    cols: 2
-                    size_hint: 1, None
-                    height: '24dp'
-                    Button:
-                        text: '+'
-                        on_release: root.btn_add_cat()
-                    Button:
-                        text: '-'
-                        on_release: root.btn_delete_cat()
+        TitleBox:
+            id: title
+            pos_hint: {'top': 1}
+            size_hint_y: None
+            height: '44dp'
+            lbl: 'Categories'
 
         BoxLayout:
-            orientation: 'vertical'
-           
-            # header
-            Label:
-                text: 'Tasks'
-                size_hint_y: None
-                height: max(dp(45), self.texture_size[1] + dp(10))
-                text_size: self.width, None
-                valign: 'middle'
-                halign: 'center'
+            size_hint: None, None
+            height: '44sp'
+            Button:
+                text: '<-'
+                on_press: root.back()
+                width: '44sp'
 
-                canvas.before:
-                    Color:
-                        rgba: .2, .2, .2, .8
-                    Rectangle:
-                        size: self.size
-                        pos: self.pos
-            
-            # buttons
+            Button:
+                text: '+'
+                on_press: root.btn_add_category()
+                width: '44sp'
+
+        Label:
+            size_hint_y: None
+            height: '50sp'
+
+        ScrollView:
+            id: scroll
             GridLayout:
-                cols: 3
+                cols: 1
                 size_hint: 1, None
-                #spacing: 10
-                #padding: 10
-                height: '24dp'
-                Button:
-                    text: 'Add'
-                    #height: '24dp'
-                    on_release: root.btn_add()
-                Button:
-                    text: 'Delete'
-                    #height: '24dp'
-                    on_release: root.btn_delete()
-                Button:
-                    text: 'Disable'
+                id: grid
 
-            # main view
-            ScrollView:
-                id: scroll
-                GridLayout:
-                    cols: 1
-                    size_hint: 1, None
-                    id: grid
+<CategoryScreen>:
+    title: title
+    scroll: scroll
+    grid: grid
+
+    canvas:
+        Color:
+            rgb: 1, 1, 1
+        Rectangle:
+            source: 'data/images/background.jpg'
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        TitleBox:
+            id: title
+            pos_hint: {'top': 1}
+            size_hint_y: None
+            height: '44dp'
+            lbl: 'Category'
+
+        BoxLayout:
+            size_hint: None, None
+            height: '44sp'
+            Button:
+                text: '<-'
+                on_press: root.back()
+                width: '44sp'
+
+            Button:
+                text: '+'
+                on_press: root.btn_add_task()
+                width: '44sp'
+
+        Label:
+            size_hint_y: None
+            height: '50sp'
+
+        ScrollView:
+            id: scroll
+            GridLayout:
+                cols: 1
+                size_hint: 1, None
+                id: grid
+
+<TaskScreen>:
+    title: title
+    scroll: scroll
+    grid: grid
+
+    canvas:
+        Color:
+            rgb: 1, 1, 1
+        Rectangle:
+            source: 'data/images/background.jpg'
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+
+        TitleBox:
+            id: title
+            pos_hint: {'top': 1}
+            size_hint_y: None
+            height: '44dp'
+            lbl: 'Category'
+
+        Button:
+            size_hint_y: None
+            text: 'Back'
+            height: '50sp'
+            on_press: root.manager.current='project'
+
+        Button:
+            size_hint_y: None
+            text: 'Add Task'
+            height: '50sp'
+            on_press: root.btn_add_task()
+
+        Label:
+            size_hint_y: None
+            height: '50sp'
+
+        ScrollView:
+            id: scroll
+            GridLayout:
+                cols: 1
+                size_hint: 1, None
+                id: grid
 
 
+#<PTimeWidget>:
+#    projects: projects
+#    scroll: scroll
+#    drop_project: drop_project
+#    grid: grid
+#
+#    canvas:
+#        Color:
+#            rgb: 1, 1, 1
+#        Rectangle:
+#            source: 'data/images/background.jpg'
+#            size: self.size
+#
+#    BoxLayout:
+#        BoxLayout:
+#            size_hint: 0.3, 1
+#            orientation: 'vertical'
+#
+#            # logo
+#            BoxLayout:
+#                padding: '10dp'
+#                spacing: '10dp'
+#                size_hint: None, None
+#                pos_hint: {'top': 1}
+#                height: '44dp'
+#                Image:
+#                    size_hint: None, None
+#                    size: '24dp', '24dp'
+#                    source: 'data/logo/kivy-icon-64.png'
+#                    mipmap: True
+#                Label:
+#                    height: '24dp'
+#                    text_size: self.width, None
+#                    color: (1, 1, 1, .8)
+#                    text: 'PTime'
+#
+#            # project tree
+#            BoxLayout:
+#                orientation: 'vertical'
+#                Spinner:
+#                    size_hint: 1, None
+#                    height: '24dp'
+#                    id: drop_project
+#
+#                TreeView:
+#                    id: projects
+#                    root_options: {'text': 'Projects', 'no_selection': True}
+#                    hide_root: True
+#
+#                BoxLayout:
+#                    cols: 2
+#                    size_hint: 1, None
+#                    height: '24dp'
+#                    Button:
+#                        text: '+'
+#                        on_release: root.btn_add_cat()
+#                    Button:
+#                        text: '-'
+#                        on_release: root.btn_delete_cat()
+#
+#        BoxLayout:
+#            orientation: 'vertical'
+#           
+#            # header
+#            Label:
+#                text: 'Tasks'
+#                size_hint_y: None
+#                height: max(dp(45), self.texture_size[1] + dp(10))
+#                text_size: self.width, None
+#                valign: 'middle'
+#                halign: 'center'
+#
+#                canvas.before:
+#                    Color:
+#                        rgba: .2, .2, .2, .8
+#                    Rectangle:
+#                        size: self.size
+#                        pos: self.pos
+#            
+#            # buttons
+#            GridLayout:
+#                cols: 3
+#                size_hint: 1, None
+#                #spacing: 10
+#                #padding: 10
+#                height: '24dp'
+#                Button:
+#                    text: 'Add'
+#                    #height: '24dp'
+#                    on_release: root.btn_add()
+#                Button:
+#                    text: 'Delete'
+#                    #height: '24dp'
+#                    on_release: root.btn_delete()
+#                Button:
+#                    text: 'Disable'
+#
+#            # main view
+#            ScrollView:
+#                id: scroll
+#                GridLayout:
+#                    cols: 1
+#                    size_hint: 1, None
+#                    id: grid

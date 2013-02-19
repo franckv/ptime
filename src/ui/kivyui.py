@@ -1,7 +1,10 @@
+import sys
+
 import kivy
 from kivy.app import App
 from kivy.metrics import dp
 from kivy.factory import Factory
+from kivy.properties import StringProperty, ObjectProperty
 from kivy.uix.widget import Widget
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
@@ -12,153 +15,157 @@ from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.popup import Popup
+from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
 
 import config
 from utils import Utils
 from backend import get_backend
 from model import Category
 
+class TitleBox(BoxLayout):
+    lbl = StringProperty('')
+
 class InputBox(Widget):
     def __init__(self, **kwargs):
         self.title = kwargs['title']
         super(InputBox, self).__init__(**kwargs)
 
-class PTimeWidget(FloatLayout):
-    def btn_add(self):
-        node = self.projects.selected_node
+class SelectBox(Widget):
+    def __init__(self, **kwargs):
+        self.title = kwargs['title']
+        super(SelectBox, self).__init__(**kwargs)
 
-        if not hasattr(node, 'item') or node.is_selected == False:
-            return
+class MainScreen(Screen):
+    project = StringProperty('<none>')
 
-        item = node.item
-
-        if isinstance(item, Category):
-            inputbox = InputBox(title='New task')
-            inputbox.done.bind(on_release=lambda btn, popup=inputbox.popup, value=inputbox.value, item=item, node=node: self.add_task(popup, value, item, node))
-            inputbox.popup.open()
-
-    def add_task(self, popup, value, item, node):
-        popup.dismiss()
-        if value.text is not None and len(value.text) > 0:
-            self.app.utils.create_project_task(item.project, item, value.text)
-            self.app.on_select_node(self.projects, node)
-
-    def btn_delete(self):
-        if len(self.grid.children) > 0:
-            for child in self.grid.children:
-                label, check = child.children
-                if check.active:
-                    item = label.item
-                    self.app.utils.delete_project_task(item.category.project, item.category, item)
-            node = self.projects.selected_node
-            if node is not None and node.is_selected:
-                self.app.on_select_node(self.projects, node)
-
-    def btn_add_cat(self):
-        project = self.drop_project.text
-        inputbox = InputBox(title='New category')
-        inputbox.done.bind(on_release=lambda btn, popup=inputbox.popup, value=inputbox.value, project=project: self.add_cat(popup, value, project))
+    def btn_add_project(self):
+        inputbox = InputBox(title='New project')
+        inputbox.done.bind(on_release=lambda btn, popup=inputbox.popup, value=inputbox.value: self.add_project(popup, value))
         inputbox.popup.open()
 
-    def add_cat(self, popup, value, project):
+    def add_project(self, popup, value):
         popup.dismiss()
         if value.text is not None and len(value.text) > 0:
-            self.app.utils.create_project_category(project, value.text)
-            self.app.build_tree(project, self.projects)
+            project = self.manager.app.utils.create_project(value.text)
+            self.manager.app.utils.set_project_default(project)
+            self.manager.app.set_project(project)
 
-    def btn_delete_cat(self):
-        project = self.drop_project.text
+    def btn_select_project(self):
+        selectbox = SelectBox(title='Select project')
 
-        node = self.projects.selected_node
-        if not hasattr(node, 'item') or node.is_selected == False:
-            return
-        item = node.item
-        if isinstance(item, Category):
-            self.app.utils.delete_project_category(project, item)
-        self.app.build_tree(project, self.projects)
-        node.is_selected = False
-        self.app.on_select_node(self.projects, None)
+        project = self.manager.app.project
 
-    def show_popup(self, title, cb):
-        content = GridLayout(rows=4)
-        content.add_widget(BoxLayout())
-        line = BoxLayout(size_hint_y=None, height='50sp')
-        lbl = Label(text='Name', halign='left', valign='middle')
-        lbl.bind(size=lbl.setter('text_size'))
-        line.add_widget(lbl)
-        value = TextInput()
-        line.add_widget(value)
-        content.add_widget(line)
-        content.add_widget(BoxLayout())
-        btnclose = Button(text='Done', size_hint_y=None, height='50sp')
-        content.add_widget(btnclose)
-        popup = Popup(content=content, title=title,
-                      size_hint=(None, None), size=('300dp', '300dp'))
-        btnclose.bind(on_release=lambda btn, popup=popup, value=value: cb(btn, popup, value))
-        popup.open()
+        for proj in self.manager.app.utils.get_projects():
+            selectbox.values.values.append(proj.name)
 
+        selectbox.values.text = project.name
+
+        selectbox.done.bind(on_release=lambda btn, popup=selectbox.popup, values=selectbox.values: self.select_project(popup, values))
+        selectbox.popup.open()
+
+    def select_project(self, popup, values):
+        popup.dismiss()
+        if values.text is not None and len(values.text) > 0:
+            project = self.manager.app.utils.get_project(values.text)
+            self.manager.app.set_project(project)
+            self.open_project()
+
+    def open_project(self):
+        self.manager.transition.direction='left'
+        self.manager.current = 'project'
+
+class ProjectScreen(Screen):
+    def btn_add_category(self):
+        project = self.manager.app.project
+        inputbox = InputBox(title='New category')
+        inputbox.done.bind(on_release=lambda btn, popup=inputbox.popup, value=inputbox.value, project=project: self.add_category(popup, value, project))
+        inputbox.popup.open()
+
+    def add_category(self, popup, value, project):
+        popup.dismiss()
+        if value.text is not None and len(value.text) > 0:
+            self.manager.app.utils.create_project_category(project, value.text)
+            self.manager.app.update_categories(project)
+
+    def back(self):
+        self.manager.transition.direction='right'
+        self.manager.current='main'
+
+class CategoryScreen(Screen):
+    def btn_add_task(self):
+        project = self.manager.app.project
+        category = self.manager.app.category
+        inputbox = InputBox(title='New Task')
+        inputbox.done.bind(on_release=lambda btn, popup=inputbox.popup, value=inputbox.value, project=project, category=category: self.add_task(popup, value, project, category))
+        inputbox.popup.open()
+
+    def add_task(self, popup, value, project, category):
+        popup.dismiss()
+        if value.text is not None and len(value.text) > 0:
+            self.manager.app.utils.create_project_task(project, category, value.text)
+            self.manager.app.update_tasks(project, category)
+
+    def back(self):
+        self.manager.transition.direction='right'
+        self.manager.current='project'
+
+
+Factory.register('TitleBox', cls=TitleBox)
 Factory.register('InputBox', cls=InputBox)
-Factory.register('PTimeWidget', cls=PTimeWidget)
+Factory.register('SelectBox', cls=SelectBox)
+Factory.register('MainScreen', cls=MainScreen)
+Factory.register('ProjectScreen', cls=ProjectScreen)
+Factory.register('CategoryScreen', cls=CategoryScreen)
 
 class PTimeApp(App):
     def build(self):
-        self.window = PTimeWidget()
-        self.window.app = self
+        self.screens = ScreenManager(transition=SlideTransition())
+        self.screens.app = self
+        self.screens.add_widget(MainScreen(name='main'))
+        self.screens.add_widget(ProjectScreen(name='project'))
+        self.screens.add_widget(CategoryScreen(name='category'))
+        self.screens.current = 'main'
+
         backend = get_backend(config) 
         self.utils = Utils(backend)
-        default_project = self.utils.get_default_project()
-        self.window.drop_project.text = default_project.name
-        for proj in self.utils.get_projects():
-            self.window.drop_project.values.append(proj.name)
+        project = self.utils.get_default_project()
+        self.set_project(project)
 
-        self.window.drop_project.bind(text=self.select_project)
+        categories = self.screens.get_screen('project')
+        categories.grid.bind(minimum_height=categories.grid.setter('height'))
 
-        self.build_tree(default_project, self.window.projects)
+        return self.screens
 
-        self.window.projects.bind(selected_node=self.on_select_node)
+    def set_project(self, project):
+        self.project = project
+        self.screens.get_screen('main').project = self.project.name
+        self.update_categories(project)
 
-        self.window.grid.bind(minimum_height=self.window.grid.setter('height'))
+    def update_categories(self, project):
+        grid = self.screens.get_screen('project').grid
+        grid.clear_widgets()
+        for cat in self.utils.get_project_categories(project):
+            lbl = Button(text=cat.name, size_hint_y=None)
+            lbl.height = dp(44)
+            lbl.bind(on_release=lambda btn, category=cat.name: self.select_category(category))
 
-        return self.window
+            grid.add_widget(lbl)
 
-    def select_project(self, menu, value):
-        project = self.utils.get_project(value)
-        self.build_tree(project, self.window.projects)
+    def select_category(self, category):
+        self.category = category
+        self.update_tasks(self.project, category)
+        self.screens.transition.direction='left'
+        self.screens.current='category'
 
-        if self.window.projects.selected_node is not None:
-            self.window.projects.selected_node.is_selected = False
-            self.on_select_node(None, None)
+    def update_tasks(self, project, category):
+        grid = self.screens.get_screen('category').grid
+        grid.clear_widgets()
+        for task in self.utils.get_project_tasks(project, category):
+            lbl = Button(text=task.name, size_hint_y=None)
+            lbl.height = dp(44)
+            lbl.bind(on_release=lambda btn, project=project, category=category, task=task.name: self.select_task(project, category, task))
 
-    def build_tree(self, project, tree):
-        while not tree.root.is_leaf:
-            tree.remove_node(tree.root.nodes[0])
+            grid.add_widget(lbl)
 
-        #p = tree.add_node(TreeViewLabel(text=project.name, is_open=project.default, no_selection=True))
-        categories = self.utils.get_project_categories(project)
-        for category in categories:
-            c = tree.add_node(TreeViewLabel(text=category.name, is_open=True, no_selection=False))
-            c.item = category
-            tasks = self.utils.get_project_tasks(project, category)
-
-    def on_select_node(self, tree, node):
-        self.window.grid.clear_widgets()
-
-        if not hasattr(node, 'item'):
-            return
-
-        item = node.item
-
-        if isinstance(item, Category):
-            tasks = self.utils.get_project_tasks(item.project, item)
-
-            for task in tasks:
-                layout = BoxLayout(size_hint_y=None)
-                layout.height = dp(24)
-                self.window.grid.add_widget(layout)
-                check = CheckBox(size_hint_x=0.1)
-                layout.add_widget(check)
-                lbl = Label(text=task.name, halign='left', valign='middle')
-                lbl.item = task
-                lbl.bind(size=lbl.setter('text_size'))
-                layout.add_widget(lbl)
-
+    def select_task(self, project, category, task):
+        pass
