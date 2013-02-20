@@ -4,46 +4,15 @@ import kivy
 from kivy.app import App
 from kivy.metrics import dp
 from kivy.factory import Factory
-from kivy.properties import StringProperty, ObjectProperty
-from kivy.uix.widget import Widget
-from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.treeview import TreeView, TreeViewLabel
+from kivy.properties import StringProperty
 from kivy.uix.button import Button
-from kivy.uix.label import Label
-from kivy.uix.textinput import TextInput
-from kivy.uix.checkbox import CheckBox
-from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
 
 import config
+from widgets import TitleBox, PopupBox, InputBox, ConfirmBox, SelectBox
 from utils import Utils
 from backend import get_backend
 from model import Category
-
-class TitleBox(BoxLayout):
-    lbl = StringProperty('')
-
-class PopupBox(Widget):
-    def __init__(self, **kwargs):
-        self.title = kwargs['title']
-        super(PopupBox, self).__init__(**kwargs)
-
-    def open(self):
-        self.popup.open()
-
-    def close(self):
-        self.popup.dismiss()
-
-class InputBox(PopupBox):
-    pass
-
-class ConfirmBox(PopupBox):
-    pass
-
-class SelectBox(PopupBox):
-    pass
 
 class MainScreen(Screen):
     project = StringProperty('<none>')
@@ -122,17 +91,14 @@ class CategoryScreen(Screen):
     def btn_delete_category(self):
         project = self.manager.app.project
         category = self.manager.app.category
-        confirmbox = ConfirmBox(title='Delete Category?')
+        confirmbox = ConfirmBox(title='Delete category and all tasks?')
         confirmbox.done.bind(on_release=lambda btn, confirmbox=confirmbox, project=project, category=category: self.delete_category(confirmbox, project, category))
         confirmbox.open()
 
     def delete_category(self, confirmbox, project, category):
         confirmbox.close()
+        self.manager.app.utils.delete_project_category(project, category)
 
-Factory.register('TitleBox', cls=TitleBox)
-Factory.register('InputBox', cls=InputBox)
-Factory.register('ConfirmBox', cls=ConfirmBox)
-Factory.register('SelectBox', cls=SelectBox)
 Factory.register('MainScreen', cls=MainScreen)
 Factory.register('ProjectScreen', cls=ProjectScreen)
 Factory.register('CategoryScreen', cls=CategoryScreen)
