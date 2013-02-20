@@ -140,15 +140,17 @@ class PTimeApp(App):
     def update_categories(self, project):
         grid = self.screens.get_screen('project').grid
         grid.clear_widgets()
-        for cat in self.utils.get_project_categories(project):
-            lbl = Button(text=cat.name, size_hint_y=None)
+        for category in self.utils.get_project_categories(project):
+            lbl = Button(text=category.name, size_hint_y=None)
             lbl.height = dp(44)
-            lbl.bind(on_release=lambda btn, category=cat.name: self.select_category(category))
+            lbl.bind(on_release=lambda btn, category=category: self.select_category(category))
 
             grid.add_widget(lbl)
 
     def select_category(self, category):
         self.category = category
+        self.screens.get_screen('category').category = self.category.name
+        self.screens.get_screen('task').category = self.category.name
         self.update_tasks(self.project, category)
         self.screens.transition.direction='left'
         self.screens.current='category'
@@ -159,11 +161,12 @@ class PTimeApp(App):
         for task in self.utils.get_project_tasks(project, category):
             lbl = Button(text=task.name, size_hint_y=None)
             lbl.height = dp(44)
-            lbl.bind(on_release=lambda btn, project=project, category=category, task=task.name: self.select_task(task))
+            lbl.bind(on_release=lambda btn, task=task: self.select_task(task))
 
             grid.add_widget(lbl)
 
     def select_task(self, task):
         self.task = task
+        self.screens.get_screen('task').task = self.task.name
         self.screens.transition.direction='left'
         self.screens.current='task'
