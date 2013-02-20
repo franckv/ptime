@@ -24,6 +24,7 @@ class MainScreen(Screen):
             project = self.manager.app.utils.create_project(value)
             self.manager.app.utils.set_project_default(project)
             self.manager.app.set_project(project)
+            self.open_project()
 
     def btn_select_project(self):
         project = self.manager.app.project
@@ -59,6 +60,17 @@ class ProjectScreen(Screen):
     def back(self):
         self.manager.transition.direction='right'
         self.manager.current='main'
+
+    def btn_delete_project(self):
+        project = self.manager.app.project
+        confirmbox = ConfirmBox(title='Delete project?', on_done=self.delete_project, ctx=[project])
+        confirmbox.open()
+
+    def delete_project(self, project):
+        self.manager.app.utils.delete_project(project)
+        project = self.manager.app.utils.get_default_project()
+        self.manager.app.set_project(project)
+        self.back()
 
 class CategoryScreen(Screen):
     project = StringProperty('<none>')
@@ -130,6 +142,8 @@ class PTimeApp(App):
         return self.screens
 
     def set_project(self, project):
+        if project is None:
+            return
         self.project = project
         self.screens.get_screen('main').project = self.project.name
         self.screens.get_screen('project').project = self.project.name

@@ -56,6 +56,18 @@ class Utils(object):
 
         self.backend.update_item(project)
 
+    def delete_project(self, project):
+        if not isinstance(project, Project):
+            project = self.get_project(project)
+
+        if project is None:
+            return
+
+        categories = self.get_project_categories(project)
+        for category in categories:
+            self.delete_project_category(project, category)
+        self.backend.delete_item(project)
+
     # categories
 
     def create_category(self, category):
