@@ -15,10 +15,21 @@
         color: (1, 1, 1, .8)
         text: 'PTime - ' + root.lbl
 
+[BoxButtons@BoxLayout]:
+    size_hint_y: None
+    height: '50sp'
+    spacing: '10dp'
+    Button:
+        text: 'Done'
+        on_release: ctx.box.btn_done()
+    Button:
+        text: 'Cancel'
+        on_release: ctx.box.close()
+
 <SelectBox>:
     popup: popup
-    values: values
-    done: done
+    combo: combo
+    #done: done
 
     Popup:
         id: popup
@@ -40,24 +51,15 @@
                 size_hint_y: None
                 height: '50sp'
                 Spinner:
-                    id: values
+                    id: combo
 
             Label:
-            BoxLayout:
-                size_hint_y: None
-                height: '50sp'
-                spacing: '10dp'
-                Button:
-                    id: done
-                    text: 'Done'
-                Button:
-                    text: 'Cancel'
-                    on_release: root.close()
+            BoxButtons:
+                box: root
 
 <InputBox>:
     popup: popup
     value: value
-    done: done
 
     Popup:
         id: popup
@@ -81,23 +83,14 @@
                 height: '35sp'
                 id: value
                 focus: True
-                on_text_validate: root.done.dispatch('on_release')
+                on_text_validate: root.btn_done()
 
             Label:
-            BoxLayout:
-                size_hint_y: None
-                height: '50sp'
-                spacing: '10dp'
-                Button:
-                    id: done
-                    text: 'Done'
-                Button:
-                    text: 'Cancel'
-                    on_release: root.close()
+            BoxButtons:
+                box: root
 
 <ConfirmBox>:
     popup: popup
-    done: done
 
     Popup:
         id: popup
@@ -105,16 +98,8 @@
         size_hint: (None, None)
         size: ('250dp', '150dp')
 
-        BoxLayout:
-            size_hint_y: None
-            height: '50sp'
-            spacing: '10dp'
-            Button:
-                id: done
-                text: 'Done'
-            Button:
-                text: 'Cancel'
-                on_release: root.close()
+        BoxButtons:
+            box: root
 
 <MainScreen>:
     title: title
