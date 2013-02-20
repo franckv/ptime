@@ -15,7 +15,6 @@ from model import Category
 
 class MainScreen(Screen):
     project = StringProperty('<none>')
-
     def btn_add_project(self):
         inputbox = InputBox(title='New project', on_done=self.add_project)
         inputbox.open()
@@ -46,6 +45,7 @@ class MainScreen(Screen):
         self.manager.current = 'project'
 
 class ProjectScreen(Screen):
+    project = StringProperty('<none>')
     def btn_add_category(self):
         project = self.manager.app.project
         inputbox = InputBox(title='New category', on_done=self.add_category, ctx=[project])
@@ -61,6 +61,8 @@ class ProjectScreen(Screen):
         self.manager.current='main'
 
 class CategoryScreen(Screen):
+    project = StringProperty('<none>')
+    category = StringProperty('<none>')
     def btn_add_task(self):
         project = self.manager.app.project
         category = self.manager.app.category
@@ -87,6 +89,26 @@ class CategoryScreen(Screen):
         self.manager.app.update_categories(project)
         self.back()
 
+class TaskScreen(Screen):
+    project = StringProperty('<none>')
+    category = StringProperty('<none>')
+    task = StringProperty('<none>')
+    def back(self):
+        self.manager.transition.direction='right'
+        self.manager.current='category'
+
+    def btn_delete_task(self):
+        project = self.manager.app.project
+        category = self.manager.app.category
+        task = self.manager.app.task
+        confirmbox = ConfirmBox(title='Delete task?', on_done=self.delete_task, ctx=[project, category, task])
+        confirmbox.open()
+
+    def delete_task(self, project, category, task):
+        self.manager.app.utils.delete_project_task(project, category, task)
+        self.manager.app.update_tasks(project, category)
+        self.back()
+
 class PTimeApp(App):
     def build(self):
         self.screens = ScreenManager(transition=SlideTransition())
@@ -94,6 +116,7 @@ class PTimeApp(App):
         self.screens.add_widget(MainScreen(name='main'))
         self.screens.add_widget(ProjectScreen(name='project'))
         self.screens.add_widget(CategoryScreen(name='category'))
+        self.screens.add_widget(TaskScreen(name='task'))
         self.screens.current = 'main'
 
         backend = get_backend(config) 
@@ -109,6 +132,9 @@ class PTimeApp(App):
     def set_project(self, project):
         self.project = project
         self.screens.get_screen('main').project = self.project.name
+        self.screens.get_screen('project').project = self.project.name
+        self.screens.get_screen('category').project = self.project.name
+        self.screens.get_screen('task').project = self.project.name
         self.update_categories(project)
 
     def update_categories(self, project):
@@ -133,9 +159,11 @@ class PTimeApp(App):
         for task in self.utils.get_project_tasks(project, category):
             lbl = Button(text=task.name, size_hint_y=None)
             lbl.height = dp(44)
-            lbl.bind(on_release=lambda btn, project=project, category=category, task=task.name: self.select_task(project, category, task))
+            lbl.bind(on_release=lambda btn, project=project, category=category, task=task.name: self.select_task(task))
 
             grid.add_widget(lbl)
 
-    def select_task(self, project, category, task):
-        pass
+    def select_task(self, task):
+        self.task = task
+        self.screens.transition.direction='left'
+        self.screens.current='task'
