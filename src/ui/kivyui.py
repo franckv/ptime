@@ -25,26 +25,36 @@ from model import Category
 class TitleBox(BoxLayout):
     lbl = StringProperty('')
 
-class InputBox(Widget):
+class PopupBox(Widget):
     def __init__(self, **kwargs):
         self.title = kwargs['title']
-        super(InputBox, self).__init__(**kwargs)
+        super(PopupBox, self).__init__(**kwargs)
 
-class SelectBox(Widget):
-    def __init__(self, **kwargs):
-        self.title = kwargs['title']
-        super(SelectBox, self).__init__(**kwargs)
+    def open(self):
+        self.popup.open()
+
+    def close(self):
+        self.popup.dismiss()
+
+class InputBox(PopupBox):
+    pass
+
+class ConfirmBox(PopupBox):
+    pass
+
+class SelectBox(PopupBox):
+    pass
 
 class MainScreen(Screen):
     project = StringProperty('<none>')
 
     def btn_add_project(self):
         inputbox = InputBox(title='New project')
-        inputbox.done.bind(on_release=lambda btn, popup=inputbox.popup, value=inputbox.value: self.add_project(popup, value))
-        inputbox.popup.open()
+        inputbox.done.bind(on_release=lambda btn, inputbox=inputbox, value=inputbox.value: self.add_project(inputbox, value))
+        inputbox.open()
 
-    def add_project(self, popup, value):
-        popup.dismiss()
+    def add_project(self, inputbox, value):
+        inputbox.close()
         if value.text is not None and len(value.text) > 0:
             project = self.manager.app.utils.create_project(value.text)
             self.manager.app.utils.set_project_default(project)
@@ -60,11 +70,11 @@ class MainScreen(Screen):
 
         selectbox.values.text = project.name
 
-        selectbox.done.bind(on_release=lambda btn, popup=selectbox.popup, values=selectbox.values: self.select_project(popup, values))
-        selectbox.popup.open()
+        selectbox.done.bind(on_release=lambda btn, selectbox=selectbox, values=selectbox.values: self.select_project(selectbox, values))
+        selectbox.open()
 
-    def select_project(self, popup, values):
-        popup.dismiss()
+    def select_project(self, selectbox, values):
+        selectbox.close()
         if values.text is not None and len(values.text) > 0:
             project = self.manager.app.utils.get_project(values.text)
             self.manager.app.set_project(project)
@@ -78,11 +88,11 @@ class ProjectScreen(Screen):
     def btn_add_category(self):
         project = self.manager.app.project
         inputbox = InputBox(title='New category')
-        inputbox.done.bind(on_release=lambda btn, popup=inputbox.popup, value=inputbox.value, project=project: self.add_category(popup, value, project))
-        inputbox.popup.open()
+        inputbox.done.bind(on_release=lambda btn, inputbox=inputbox, value=inputbox.value, project=project: self.add_category(inputbox, value, project))
+        inputbox.open()
 
-    def add_category(self, popup, value, project):
-        popup.dismiss()
+    def add_category(self, inputbox, value, project):
+        inputbox.close()
         if value.text is not None and len(value.text) > 0:
             self.manager.app.utils.create_project_category(project, value.text)
             self.manager.app.update_categories(project)
@@ -96,11 +106,11 @@ class CategoryScreen(Screen):
         project = self.manager.app.project
         category = self.manager.app.category
         inputbox = InputBox(title='New Task')
-        inputbox.done.bind(on_release=lambda btn, popup=inputbox.popup, value=inputbox.value, project=project, category=category: self.add_task(popup, value, project, category))
-        inputbox.popup.open()
+        inputbox.done.bind(on_release=lambda btn, inputbox=inputbox, value=inputbox.value, project=project, category=category: self.add_task(inputbox, value, project, category))
+        inputbox.open()
 
-    def add_task(self, popup, value, project, category):
-        popup.dismiss()
+    def add_task(self, inputbox, value, project, category):
+        inputbox.close()
         if value.text is not None and len(value.text) > 0:
             self.manager.app.utils.create_project_task(project, category, value.text)
             self.manager.app.update_tasks(project, category)
@@ -109,9 +119,19 @@ class CategoryScreen(Screen):
         self.manager.transition.direction='right'
         self.manager.current='project'
 
+    def btn_delete_category(self):
+        project = self.manager.app.project
+        category = self.manager.app.category
+        confirmbox = ConfirmBox(title='Delete Category?')
+        confirmbox.done.bind(on_release=lambda btn, confirmbox=confirmbox, project=project, category=category: self.delete_category(confirmbox, project, category))
+        confirmbox.open()
+
+    def delete_category(self, confirmbox, project, category):
+        confirmbox.close()
 
 Factory.register('TitleBox', cls=TitleBox)
 Factory.register('InputBox', cls=InputBox)
+Factory.register('ConfirmBox', cls=ConfirmBox)
 Factory.register('SelectBox', cls=SelectBox)
 Factory.register('MainScreen', cls=MainScreen)
 Factory.register('ProjectScreen', cls=ProjectScreen)

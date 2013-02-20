@@ -22,34 +22,37 @@
 
     Popup:
         id: popup
-        content: content
         title: root.title
         size_hint: (None, None)
         size: ('300dp', '300dp')
 
-        GridLayout:
-            id: content
-            rows: 4
-            BoxLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            Label:
                 size_hint_y: None
                 height: '50sp'
-                Label:
-                    text: 'Name'
-                    halign: 'left'
-                    valign: 'middle'
-                    text_size: self.width, None
+                text: 'Name'
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.width, None
+
             BoxLayout:
                 size_hint_y: None
                 height: '50sp'
                 Spinner:
                     id: values
 
+            Label:
             BoxLayout:
-            Button:
-                id: done
-                text: 'Done'
                 size_hint_y: None
                 height: '50sp'
+                spacing: '10dp'
+                Button:
+                    id: done
+                    text: 'Done'
+                Button:
+                    text: 'Cancel'
+                    on_release: root.close()
 
 <InputBox>:
     popup: popup
@@ -58,34 +61,60 @@
 
     Popup:
         id: popup
-        content: content
         title: root.title
         size_hint: (None, None)
-        size: ('300dp', '300dp')
+        size: ('300dp', '250dp')
 
-        GridLayout:
-            id: content
-            rows: 4
+        BoxLayout:
+            orientation: 'vertical'
+            Label:
+                size_hint_y: None
+                height: '50sp'
+                text: 'Name'
+                halign: 'left'
+                valign: 'middle'
+                text_size: self.width, None
+
+            TextInput:
+                multiline: False
+                size_hint_y: None
+                height: '35sp'
+                id: value
+                focus: True
+                on_text_validate: root.done.dispatch('on_release')
+
+            Label:
             BoxLayout:
                 size_hint_y: None
                 height: '50sp'
-                Label:
-                    text: 'Name'
-                    halign: 'left'
-                    valign: 'middle'
-                    text_size: self.width, None
-            BoxLayout:
-                size_hint_y: None
-                height: '40sp'
-                TextInput:
-                    id: value
-                    focus: True
-            BoxLayout:
+                spacing: '10dp'
+                Button:
+                    id: done
+                    text: 'Done'
+                Button:
+                    text: 'Cancel'
+                    on_release: root.close()
+
+<ConfirmBox>:
+    popup: popup
+    done: done
+
+    Popup:
+        id: popup
+        title: root.title
+        size_hint: (None, None)
+        size: ('250dp', '150dp')
+
+        BoxLayout:
+            size_hint_y: None
+            height: '50sp'
+            spacing: '10dp'
             Button:
                 id: done
                 text: 'Done'
-                size_hint_y: None
-                height: '50sp'
+            Button:
+                text: 'Cancel'
+                on_release: root.close()
 
 <MainScreen>:
     title: title
@@ -127,7 +156,6 @@
 
 <ProjectScreen>:
     title: title
-    scroll: scroll
     grid: grid
 
     canvas:
@@ -149,23 +177,24 @@
 
         BoxLayout:
             size_hint: None, None
-            height: '44sp'
+            height: '32sp'
             Button:
-                text: '<-'
+                size_hint_x: None
+                background_normal: '../icons/back.png'
+                #text: '<-'
                 on_press: root.back()
-                width: '44sp'
+                width: '32sp'
+                border: (0, 0, 0, 0)
 
             Button:
-                text: '+'
+                size_hint_x: None
+                background_normal: '../icons/add.png'
+                #text: '+'
                 on_press: root.btn_add_category()
-                width: '44sp'
-
-        Label:
-            size_hint_y: None
-            height: '50sp'
+                width: '32sp'
+                border: (0, 0, 0, 0)
 
         ScrollView:
-            id: scroll
             GridLayout:
                 cols: 1
                 size_hint: 1, None
@@ -173,7 +202,6 @@
 
 <CategoryScreen>:
     title: title
-    scroll: scroll
     grid: grid
 
     canvas:
@@ -195,23 +223,32 @@
 
         BoxLayout:
             size_hint: None, None
-            height: '44sp'
+            height: '32sp'
             Button:
-                text: '<-'
+                size_hint_x: None
+                background_normal: '../icons/back.png'
+                #text: '<-'
                 on_press: root.back()
-                width: '44sp'
+                width: '32sp'
+                border: (0, 0, 0, 0)
 
             Button:
-                text: '+'
+                size_hint_x: None
+                background_normal: '../icons/add.png'
+                #text: '+'
                 on_press: root.btn_add_task()
-                width: '44sp'
+                width: '32sp'
+                border: (0, 0, 0, 0)
 
-        Label:
-            size_hint_y: None
-            height: '50sp'
+            Button:
+                size_hint_x: None
+                background_normal: '../icons/delete.png'
+                #text: '+'
+                on_press: root.btn_delete_category()
+                width: '32sp'
+                border: (0, 0, 0, 0)
 
         ScrollView:
-            id: scroll
             GridLayout:
                 cols: 1
                 size_hint: 1, None
@@ -219,7 +256,6 @@
 
 <TaskScreen>:
     title: title
-    scroll: scroll
     grid: grid
 
     canvas:
@@ -256,114 +292,8 @@
             height: '50sp'
 
         ScrollView:
-            id: scroll
             GridLayout:
                 cols: 1
                 size_hint: 1, None
                 id: grid
 
-
-#<PTimeWidget>:
-#    projects: projects
-#    scroll: scroll
-#    drop_project: drop_project
-#    grid: grid
-#
-#    canvas:
-#        Color:
-#            rgb: 1, 1, 1
-#        Rectangle:
-#            source: 'data/images/background.jpg'
-#            size: self.size
-#
-#    BoxLayout:
-#        BoxLayout:
-#            size_hint: 0.3, 1
-#            orientation: 'vertical'
-#
-#            # logo
-#            BoxLayout:
-#                padding: '10dp'
-#                spacing: '10dp'
-#                size_hint: None, None
-#                pos_hint: {'top': 1}
-#                height: '44dp'
-#                Image:
-#                    size_hint: None, None
-#                    size: '24dp', '24dp'
-#                    source: 'data/logo/kivy-icon-64.png'
-#                    mipmap: True
-#                Label:
-#                    height: '24dp'
-#                    text_size: self.width, None
-#                    color: (1, 1, 1, .8)
-#                    text: 'PTime'
-#
-#            # project tree
-#            BoxLayout:
-#                orientation: 'vertical'
-#                Spinner:
-#                    size_hint: 1, None
-#                    height: '24dp'
-#                    id: drop_project
-#
-#                TreeView:
-#                    id: projects
-#                    root_options: {'text': 'Projects', 'no_selection': True}
-#                    hide_root: True
-#
-#                BoxLayout:
-#                    cols: 2
-#                    size_hint: 1, None
-#                    height: '24dp'
-#                    Button:
-#                        text: '+'
-#                        on_release: root.btn_add_cat()
-#                    Button:
-#                        text: '-'
-#                        on_release: root.btn_delete_cat()
-#
-#        BoxLayout:
-#            orientation: 'vertical'
-#           
-#            # header
-#            Label:
-#                text: 'Tasks'
-#                size_hint_y: None
-#                height: max(dp(45), self.texture_size[1] + dp(10))
-#                text_size: self.width, None
-#                valign: 'middle'
-#                halign: 'center'
-#
-#                canvas.before:
-#                    Color:
-#                        rgba: .2, .2, .2, .8
-#                    Rectangle:
-#                        size: self.size
-#                        pos: self.pos
-#            
-#            # buttons
-#            GridLayout:
-#                cols: 3
-#                size_hint: 1, None
-#                #spacing: 10
-#                #padding: 10
-#                height: '24dp'
-#                Button:
-#                    text: 'Add'
-#                    #height: '24dp'
-#                    on_release: root.btn_add()
-#                Button:
-#                    text: 'Delete'
-#                    #height: '24dp'
-#                    on_release: root.btn_delete()
-#                Button:
-#                    text: 'Disable'
-#
-#            # main view
-#            ScrollView:
-#                id: scroll
-#                GridLayout:
-#                    cols: 1
-#                    size_hint: 1, None
-#                    id: grid
