@@ -22,11 +22,10 @@ if __name__ == '__main__':
     parser = OptionParser(usage)
     parser.add_option('--ui', dest='ui', default='console', help='interface: curses, gtk or console (default)')
     parser.add_option('-i', action='store_const', const='interactive', dest='ui', help='interactive mode')
-    parser.add_option('-k', action='store_const', const='kivy', dest='ui', help='interactive mode')
+    parser.add_option('-k', action='store_const', const='kivy', dest='ui', help='kivy ui')
 
     (options, args) = parser.parse_args()
 
-    print(options.ui)
     if options.ui == 'curses':
         ui.ncurses.run()
     elif options.ui == 'gtk':
