@@ -17,6 +17,9 @@ class ModelDecoder(json.JSONDecoder):
     def decode(self, s):
         items = []
 
+        if s is None or len(s) == 0:
+            return items
+
         data = json.JSONDecoder.decode(self, s)
 
         for obj in data:
@@ -40,16 +43,19 @@ class JSon(Backend):
     def __init__(self, filename):
         self.filename = filename
         self.data = {}
+        Project.last_id = 0
+        Category.last_id = 0
+        Task.last_id = 0
 
-        if not os.path.exists(filename):
-            f = open(filename, 'a')
-        else:
+        if os.path.exists(filename):
             f = open(filename, 'r')
-        items = json.load(f, cls=ModelDecoder)
-        f.close()
-        for item in items:
-            key = item.__class__.__name__ + '.' + str(item.id)
-            self.data[key] = item
+            items = json.load(f, cls=ModelDecoder)
+            f.close()
+            for item in items:
+                if item.id > item.__class__.last_id:
+                    item.__class__.last_id = item.id
+                key = item.__class__.__name__ + '.' + str(item.id)
+                self.data[key] = item
 
     def close(self):
         pass
@@ -65,10 +71,14 @@ class JSon(Backend):
         f.close()
 
     def drop(self):
-        f = open(self.filename, 'w')
-        f.close()
+        self.reset()
 
     def reset(self):
+        self.data = {}
+        Project.last_id = 0
+        Category.last_id = 0
+        Task.last_id = 0
+
         f = open(self.filename, 'w')
         f.close()
 
@@ -77,10 +87,16 @@ class JSon(Backend):
         print(flt)
 
     def item_exists(self, cls, flt = None):
-        print('item_exists')
-        print(flt)
+        return self.get_item(cls, flt) is not None
 
     def add_item(self, item):
+        if not hasattr(item, 'id'):
+            item.__class__.last_id += 1
+            item.id = item.__class__.last_id
+        if hasattr(item, 'project'):
+            item.project_id = item.project.id
+        if hasattr(item, 'category'):
+            item.category_id = item.category.id
         key = item.__class__.__name__ + '.' + str(item.id)
         self.data[key] = item
 
@@ -94,19 +110,30 @@ class JSon(Backend):
         self.data[key] = item
 
     def get_first_item(self, cls):
-        print('get_first_item')
-
-    def get_items(self, cls, flt = None):
-        print('get_items')
-
-    def get_item(self, cls, flt = None):
         for key, obj in self.data.iteritems():
             if key.startswith(cls.__name__):
-                for attr, val in flt.iteritems():
-                    if  attr is Project.default and obj.default == val:
-                        return obj
+                return obj
 
-        return None
+    def get_items(self, cls, flt = None):
+        items = []
+        for key, obj in self.data.iteritems():
+            if key.startswith(cls.__name__):
+                found = True
+                if flt is not None:
+                    for attr, val in flt.iteritems():
+                        if not hasattr(obj, attr) or getattr(obj, attr) != val:
+                            found = False
+                            break
+                if found:
+                    items.append(obj)
+        return items
+
+    def get_item(self, cls, flt = None):
+        items = self.get_items(cld, flt)
+        if len(items) == 0:
+            return None
+        else:
+            return items[0]
 
     def bulk_update(self, cls, changes, flt = None):
         print('bulk_update')
