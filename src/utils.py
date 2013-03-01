@@ -10,12 +10,13 @@ class Utils(object):
         return False
 
     def create_project(self, project):
-        if self.backend.item_exists(Project, {Project.name: project}):
+        if self.backend.item_exists(Project, {'name': project}):
             print('Project already exists')
             return
 
         proj = Project(project)
         self.backend.add_item(proj)
+        self.backend.commit()
 
         return proj
 
@@ -27,6 +28,7 @@ class Utils(object):
             return
 
         self.set_project_default(project)
+        self.backend.commit()
 
     def get_projects(self):
         return self.backend.get_items(Project)
@@ -35,10 +37,10 @@ class Utils(object):
         if isinstance(project, Project):
             return project
 
-        return self.backend.get_item(Project, {Project.name: project})
+        return self.backend.get_item(Project, {'name': project})
 
     def get_default_project(self):
-        project = self.backend.get_item(Project, {Project.default: True})
+        project = self.backend.get_item(Project, {'default': True})
         if project is None:
             return self.backend.get_first_item(Project)
 
@@ -51,10 +53,11 @@ class Utils(object):
         if project is None:
             return
 
-        self.backend.bulk_update(Project, {Project.default: False})
+        self.backend.bulk_update(Project, {'default': False})
         project.default = True
 
         self.backend.update_item(project)
+        self.backend.commit()
 
     def delete_project(self, project):
         if not isinstance(project, Project):
@@ -67,6 +70,7 @@ class Utils(object):
         for category in categories:
             self.delete_project_category(project, category)
         self.backend.delete_item(project)
+        self.backend.commit()
 
     # categories
 
@@ -77,7 +81,12 @@ class Utils(object):
 
     def create_project_category(self, project, category):
         project = self.get_project(project)
-        if self.backend.item_exists(Category, {Category.name: category, Category.project_id: project.id}):
+
+        if project is None:
+            print('Invalid project')
+            return
+
+        if self.backend.item_exists(Category, {'name': category, 'project_id': project.id}):
             print('Category already exists')
             return
 
@@ -85,6 +94,7 @@ class Utils(object):
         cat.project = project
 
         self.backend.add_item(cat)
+        self.backend.commit()
 
         return cat
 
@@ -103,6 +113,7 @@ class Utils(object):
         for task in tasks:
             self.delete_project_task(project, category, task)
         self.backend.delete_item(category)
+        self.backend.commit()
 
     def get_category(self, project, category):
         if isinstance(category, Category):
@@ -114,7 +125,7 @@ class Utils(object):
             print('Invalid project')
             return None
 
-        return self.backend.get_item(Category, {Category.name: category, Category.project_id: project.id})
+        return self.backend.get_item(Category, {'name': category, 'project_id': project.id})
 
     def get_project_categories(self, project):
         if not isinstance(project, Project):
@@ -124,7 +135,7 @@ class Utils(object):
             print('Invalid project')
             return None
 
-        categories = self.backend.get_items(Category, {Category.project_id: project.id})
+        categories = self.backend.get_items(Category, {'project_id': project.id})
 
         return categories
 
@@ -152,7 +163,7 @@ class Utils(object):
         if cat is None:
             cat = self.create_project_category(project, category)
 
-        if self.backend.item_exists(Task, {Task.name: name, Task.category_id: cat.id}):
+        if self.backend.item_exists(Task, {'name': name, 'category_id': cat.id}):
             print('Task already exists')
             return
 
@@ -160,6 +171,7 @@ class Utils(object):
         task.category_id = cat.id
 
         self.backend.add_item(task)
+        self.backend.commit()
 
         return task
 
@@ -186,7 +198,7 @@ class Utils(object):
             print('Invalid category')
             return None
 
-        return self.backend.get_items(Task, {Task.category_id: category.id})
+        return self.backend.get_items(Task, {'category_id': category.id})
 
     def get_task(self, project, category, task):
         if isinstance(task, Task):
@@ -200,11 +212,12 @@ class Utils(object):
             print('Invalid category')
             return None
 
-        return self.backend.get_item(Task, {Task.name: task, Task.category_id: category.id})
+        return self.backend.get_item(Task, {'name': task, 'category_id': category.id})
 
     def delete_project_task(self, project, category, name):
         task = self.get_task(project, category, name)
         self.backend.delete_item(task)
+        self.backend.commit()
 
     def disable_task(self, project, category, name):
         task = self.get_task(project, category, name)
@@ -212,6 +225,7 @@ class Utils(object):
         task.enabled = False 
 
         self.backend.update_item(task)
+        self.backend.commit()
 
     def enable_task(self, project, category, name):
         task = self.get_task(project, category, name)
@@ -219,3 +233,13 @@ class Utils(object):
         task.enabled = True 
 
         self.backend.update_item(task)
+        self.backend.commit()
+
+    def create(self):
+        self.backend.create()
+
+    def drop(self):
+        self.backend.drop()
+
+    def close(self):
+        self.backend.close()
