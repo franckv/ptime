@@ -18,10 +18,13 @@ class Command(object):
                 self.list[func[3:]] = {'args': len(inspect.getargspec(f).args) - 1, 'exec': f}
 
     def do_list(self, project, category):
-        tasks = self.utils.get_tasks(project, category)
-        for task in tasks:
-            disabled = '' if task.enabled else '(Disabled)'
-            print('%s %s' % (task.name, disabled))
+        tasks = self.utils.get_project_tasks(project, category)
+        if tasks is None:
+            print('No tasks')
+        else:
+            for task in tasks:
+                disabled = '' if task.enabled else '(Disabled)'
+                print('%s %s' % (task.name, disabled))
 
     def do_create_project(self, name):
         project = self.utils.create_project(name)
@@ -45,7 +48,7 @@ class Command(object):
         category = self.utils.create_category(category)
 
     def do_create_project_category(self, project, category):
-        category = self.utils.create_category(project, category)
+        category = self.utils.create_project_category(project, category)
 
     def do_get_category(self, project, name):
         category = self.utils.get_category(project, name)
