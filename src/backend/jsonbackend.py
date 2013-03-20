@@ -125,7 +125,7 @@ class JSon(Backend):
         return sorted(items, cmp=lambda x,y: cmp(x.name, y.name))
 
     def get_item(self, cls, flt = None):
-        items = self.get_items(cld, flt)
+        items = self.get_items(cls, flt)
         if len(items) == 0:
             return None
         else:
