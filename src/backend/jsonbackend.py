@@ -122,7 +122,7 @@ class JSon(Backend):
                             break
                 if found:
                     items.append(obj)
-        return items
+        return sorted(items, cmp=lambda x,y: cmp(x.name, y.name))
 
     def get_item(self, cls, flt = None):
         items = self.get_items(cld, flt)
