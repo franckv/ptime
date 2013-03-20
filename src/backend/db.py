@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import Table, MetaData, Column, Boolean, Integer, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, backref, mapper, relationship
 from sqlalchemy.exc import OperationalError
+import sqlalchemy
 
 from model import Project, Category, Task
 from . import Backend
@@ -73,16 +74,16 @@ class DB(Backend):
                 self.session.connection().execute(table.__table__.delete())
         self.commit()
 
-    def apply_filter(self, query, flt):
+    def apply_filter(self, cls, query, flt):
         if flt is not None:
             for col, val in flt.items():
-                query = query.filter(col == val)
+                query = query.filter(getattr(cls, col) == val)
 
         return query
 
     def item_exists(self, cls, flt = None):
         query = self.session.query(cls)
-        query = self.apply_filter(query, flt)
+        query = self.apply_filter(cls, query, flt)
 
         return len(query.all()) > 0
 
@@ -110,7 +111,7 @@ class DB(Backend):
 
     def get_items(self, cls, flt = None):
         query = self.session.query(cls)
-        query = self.apply_filter(query, flt)
+        query = self.apply_filter(cls, query, flt)
         return query.all()
 
     def get_item(self, cls, flt = None):
@@ -122,7 +123,7 @@ class DB(Backend):
 
     def bulk_update(self, cls, changes, flt = None):
         query = self.session.query(cls)
-        query = self.apply_filter(query, flt)
+        query = self.apply_filter(cls, query, flt)
         query.update(changes)
         self.commit()
 
