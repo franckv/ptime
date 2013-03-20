@@ -11,7 +11,7 @@ class ModelEncoder(json.JSONEncoder):
         if isinstance(obj, Category):
             return {'class': obj.__class__.__name__, 'id': obj.id, 'name': obj.name, 'project_id': obj.project_id}
         if isinstance(obj, Task):
-            return {'class': obj.__class__.__name__, 'id': obj.id, 'name': obj.name, 'category_id': obj.category_id, 'enabled': obj.enabled}
+            return {'class': obj.__class__.__name__, 'id': obj.id, 'name': obj.name, 'category_id': obj.category_id, 'enabled': obj.enabled, 'duration': obj.duration, 'completed': obj.completed, 'rating': obj.rating}
 
 class ModelDecoder(json.JSONDecoder):
     def decode(self, s):
@@ -35,6 +35,9 @@ class ModelDecoder(json.JSONDecoder):
                 o = Task(obj['name'])
                 o.default = obj['enabled']
                 o.category_id = obj['category_id']
+                o.rating = obj['rating']
+                o.completed = obj['completed']
+                o.duration = obj['duration']
             o.id = obj['id']
             items.append(o)
         return items
