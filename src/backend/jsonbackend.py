@@ -82,10 +82,6 @@ class JSon(Backend):
         f = open(self.filename, 'w')
         f.close()
 
-    def apply_filter(self, query, flt):
-        print('apply_filter')
-        print(flt)
-
     def item_exists(self, cls, flt = None):
         return self.get_item(cls, flt) is not None
 
