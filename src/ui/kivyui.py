@@ -72,6 +72,12 @@ class ProjectScreen(Screen):
         self.manager.app.set_project(project)
         self.back()
 
+    def btn_schedule(self):
+        project = self.manager.app.project
+        schedule = self.manager.app.utils.schedule_tasks(project)
+        for task in schedule:
+            print(task.name + '(' + str(self.manager.app.utils.get_task_priority(task)) + ')' + ' cat ' + str(task.category_id))
+
 class CategoryScreen(Screen):
     project = StringProperty('<none>')
     category = StringProperty('<none>')

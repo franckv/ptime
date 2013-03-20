@@ -1,3 +1,4 @@
+from math import log
 from model import Project, Category, Task
 
 class Utils(object):
@@ -71,6 +72,35 @@ class Utils(object):
             self.delete_project_category(project, category)
         self.backend.delete_item(project)
         self.backend.commit()
+
+    def schedule_tasks(self, project, duration=60):
+        schedule = []
+
+        all_tasks = self.get_all_tasks(project)
+        if all_tasks is None:
+            return None
+
+        # sort tasks by priority
+        all_tasks = sorted(all_tasks, cmp=lambda x,y: cmp(self.get_task_priority(x), self.get_task_priority(y)), reverse=True)
+
+        # split sorted tasks in categories
+        categories = {}
+        for task in all_tasks:
+            if task.category_id not in categories:
+                categories[task.category_id] = []
+            categories[task.category_id].append(task)
+
+        # interleave categories if more than one
+        if len(categories) > 1:
+            all_tasks = [y for x in map(None, *categories.values()) for y in x]
+
+        d = 0
+        for task in [t for t in all_tasks if not t is None]:
+            if d + task.duration <= duration:
+                schedule.append(task)
+                d += task.duration
+
+        return schedule
 
     # categories
 
@@ -200,6 +230,21 @@ class Utils(object):
 
         return self.backend.get_items(Task, {'category_id': category.id})
 
+    def get_all_tasks(self, project):
+        all_tasks = []
+
+        if project is None:
+            print('Invalid project')
+            return None
+
+        categories = self.get_project_categories(project)
+        for category in categories:
+            tasks = self.get_project_tasks(project, category)
+            for task in tasks:
+                all_tasks.append(task)
+
+        return all_tasks
+
     def get_task(self, project, category, task):
         if isinstance(task, Task):
             return task
@@ -234,6 +279,11 @@ class Utils(object):
 
         self.backend.update_item(task)
         self.backend.commit()
+
+    def get_task_priority(self, task):
+        return int(10*(5-task.rating)/(1+log(1+task.completed)))
+
+    # backend
 
     def create(self):
         self.backend.create()
